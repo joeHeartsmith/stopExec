@@ -1,0 +1,28 @@
+#!/usr/bin/env stap
+
+%{
+
+%}
+
+function dont() %{
+//    printk("DEBUG: Found correct probe\n");
+    CONTEXT->kregs->di = (long unsigned int) NULL;
+    CONTEXT->kregs->si = (long unsigned int) NULL;
+    CONTEXT->kregs->dx = (long unsigned int) NULL;
+%}
+
+probe kernel.function("__se_sys_clone") {
+	cur_proc = execname()
+	if (cur_proc == @1) {
+                dont();
+		printf("KILLED: %s via clone\n", cur_proc);
+	}
+}
+
+probe kernel.function("__do_sys_vfork") {
+	cur_proc = execname()
+	if (cur_proc == @1) {
+                dont();
+		printf("KILLED: %s via fork\n", cur_proc);
+	}
+}
